@@ -30,6 +30,7 @@ Autosaves and records stay in each browser. To move an existing local game to th
 
 ## What works
 
+- Individual pearl arrivals behind source gates, animated downstream releases, and pearl flights into a focused llama card. The tabletop action area brings Villager portraits and the Camp deck forward, with turn prompts, animation skipping, and reduced motion support. See [`docs/presentation.md`](docs/presentation.md).
 - Two to four local players, with any seat controlled by a basic versioned bot.
 - Five rounds of seeded pearl, Fairy, Villager, Camp, and starting-order supplies.
 - Placement, Camp costs and market draws, Fairy collection, river and Lake pearl selection, Alpaca exchange, goals, Village recruitment, delivery, and final score breakdown.
