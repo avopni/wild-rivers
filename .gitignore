@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.tools/
+node-portable.zip
+.sim.mjs
+.chrome-smoke*/
+smoke.png
+.chrome-*/
+*-smoke.png
+board-preview.html
+.board-preview.mjs
+.board-preview.cjs
+board-new.png
