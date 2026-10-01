@@ -1,5 +1,7 @@
 # Wild Rivers application handoff
 
+The approved September 30 v3 presentation is implemented in the application, including subsequent feedback for separate two-, three-, and four-player board compositions, a straight Lake inlet, and thicker coloured Villager socket rims. [docs/presentation.md](docs/presentation.md) describes the current board, persistent player column, setup acknowledgements, movement, compact-screen controls and verification. [The approved v3 handoff](docs/mockups/approved-rounds-v3/HANDOFF.md) remains the visual reference. The rules/content version remains `prototype-2026.1`; setup presentation does not draw new outcomes or change replay history.
+
 ## Goal
 
 Build a responsive, local-first web game called Wild Rivers for computer and tablet. Complete human play, scoring, save/resume, and a basic computer opponent before pursuing optimal strategy. Make the game a learning tool: players should be able to inspect why a bot prefers an action and explore probability, opportunity cost, and uncertainty.

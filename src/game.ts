@@ -1,11 +1,11 @@
-export const CONTENT_VERSION = 'prototype-2025.4'
+export const CONTENT_VERSION = 'prototype-2026.1'
 export const POLICY_VERSION = 'river-guide-2'
 export const colors = ['green', 'blue', 'pink', 'purple', 'white'] as const
 export type Pearl = typeof colors[number]
 export const pearlPoints: Record<Pearl, number> = { green: 1, blue: 2, pink: 3, purple: 4, white: 5 }
-export const campTypes = ['Banner', 'Lantern', 'Provisions', 'Fishing Nets', 'Shamisen'] as const
+export const campTypes = ['Trail Pennant', 'Glowstone Lamp', 'Wonder Basket', 'Pearl Net', 'Whisperstrings'] as const
 export type Camp = typeof campTypes[number]
-export const fairyTypes = ['Bonfire', 'Breeze', 'Cloud', 'Mushroom', 'River'] as const
+export const fairyTypes = ['Emberglow', 'Zephyr', 'Moonveil', 'Wildbloom', 'Dewdrop'] as const
 export type Fairy = typeof fairyTypes[number]
 export type Phase = 'explore' | 'collect' | 'lake' | 'recruit' | 'deliver' | 'finished'
 export type Slot = { id: string; kind: 'river' | 'lake' | 'village'; row: number; group: number; cost: number; player: number | null; section: string; lanes: number[]; priority: number }
@@ -24,19 +24,19 @@ export type Game = {
   riverPearls: Pearl[][]; lakePearls: Pearl[]; lakeMoves: number; pearlDeck: Pearl[]; fairyDeck: Fairy[]; fairySites: FairySite[];
   villagerDeck: Villager[]; display: Villager[]; campDeck: Camp[]; campDiscard: Camp[]; market: Camp[];
   goals: Goal[]; collectQueue: string[]; collectIndex: number; recruitQueue: string[]; recruitIndex: number; deliverPlayer: number;
-  pendingDraws: { player: number; count: number } | null; pendingExtra: boolean; recruitedThisSlot: boolean; breezeLeft: number; event: string; log: RecordEntry[]; history: Snapshot[]
+  pendingDraws: { player: number; count: number } | null; pendingExtra: boolean; recruitedThisSlot: boolean; zephyrLeft: number; event: string; log: RecordEntry[]; history: Snapshot[]
 }
 export type Action =
-  | { type: 'place'; slot: string; cloud?: boolean; bonfire?: boolean }
+  | { type: 'place'; slot: string; moonveil?: boolean; emberglow?: boolean }
   | { type: 'endTurn' } | { type: 'gain'; marketIndex: number | null }
   | { type: 'pair'; card: Camp; target?: string }
-  | { type: 'collect'; pearlIndex: number; swapIndex?: number; extra?: 'net' | 'river' }
+  | { type: 'collect'; pearlIndex: number; swapIndex?: number; extra?: 'pearlNet' | 'dewdrop' }
   | { type: 'skipCollect' } | { type: 'recruit'; villagerId: string }
-  | { type: 'skipRecruit' } | { type: 'shamisen' }
+  | { type: 'skipRecruit' } | { type: 'whisperstrings' }
   | { type: 'deliver'; alpacaIndex: number; villagerId: string; socket: number }
-  | { type: 'mushroom'; villagerId: string; socket: number }
-  | { type: 'breeze'; villagerId: string; socket: number; fromVillagerId?: string; fromSocket?: number; alpacaIndex?: number }
-  | { type: 'endBreeze' } | { type: 'doneDelivery' } | { type: 'undoDelivery' }
+  | { type: 'wildbloom'; villagerId: string; socket: number }
+  | { type: 'zephyr'; villagerId: string; socket: number; fromVillagerId?: string; fromSocket?: number; alpacaIndex?: number }
+  | { type: 'endZephyr' } | { type: 'doneDelivery' } | { type: 'undoDelivery' }
 
 function rng(seed: number) { let n = seed >>> 0; return () => { n = (n + 0x6D2B79F5) >>> 0; let x = Math.imul(n ^ n >>> 15, 1 | n); x ^= x + Math.imul(x ^ x >>> 7, 61 | x); return ((x ^ x >>> 14) >>> 0) / 4294967296 } }
 function shuffled<T>(items: T[], seed: number): T[] { const a = [...items], random = rng(seed); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] } return a }
@@ -127,7 +127,7 @@ export function createGame(settings: { names: string[]; bots: boolean[]; seed?: 
       { id: 'pink', title: 'Pink Llama', needs: ['pink', 'pink', 'pink', 'pink'], owner: null },
       { id: 'blue', title: 'Blue Llama', needs: ['blue', 'blue', 'blue', 'blue'], owner: null },
       { id: 'green', title: 'Green Llama', needs: ['green', 'green', 'green', 'green'], owner: null }
-    ], collectQueue: [], collectIndex: 0, recruitQueue: [], recruitIndex: 0, deliverPlayer: 0, pendingDraws: null, pendingExtra: false, recruitedThisSlot: false, breezeLeft: 0, event: 'Round 1: place your Tribe tokens.', log: [], history: [] }
+    ], collectQueue: [], collectIndex: 0, recruitQueue: [], recruitIndex: 0, deliverPlayer: 0, pendingDraws: null, pendingExtra: false, recruitedThisSlot: false, zephyrLeft: 0, event: 'Round 1: place your Tribe tokens.', log: [], history: [] }
   prepare(game)
   game.history = [snapshot(game)]
   return game
@@ -146,7 +146,7 @@ export function actor(game: Game): number | null {
 }
 export function canUndoDelivery(game: Game): boolean {
   const last = game.log.at(-1)
-  return game.phase === 'deliver' && game.history.length > 1 && !!last && last.player === actor(game) && ['deliver', 'mushroom', 'breeze', 'endBreeze'].includes(last.action)
+  return game.phase === 'deliver' && game.history.length > 1 && !!last && last.player === actor(game) && ['deliver', 'wildbloom', 'zephyr', 'endZephyr'].includes(last.action)
 }
 function prepare(g: Game) {
   if (g.round > 1) { g.villagerDeck.push(...g.display); g.display = g.villagerDeck.splice(0, 6) }
@@ -163,10 +163,10 @@ function drawCamp(g: Game): Camp | undefined {
 function marketRefresh(g: Game) {
   if (g.market.length === 3 && g.market.every(c => c === g.market[0])) { g.campDiscard.push(...g.market); g.market = []; for (let i = 0; i < 3; i++) { const c = drawCamp(g); if (c) g.market.push(c) } }
 }
-function pay(g: Game, p: Player, cost: number, cloud?: boolean, bonfire?: boolean) {
-  if (cloud && p.fairies.includes('Cloud')) { p.fairies.splice(p.fairies.indexOf('Cloud'), 1); return }
+function pay(g: Game, p: Player, cost: number, moonveil?: boolean, emberglow?: boolean) {
+  if (moonveil && p.fairies.includes('Moonveil')) { p.fairies.splice(p.fairies.indexOf('Moonveil'), 1); return }
   let remaining = cost
-  if (bonfire && p.fairies.includes('Bonfire') && remaining) { p.fairies.splice(p.fairies.indexOf('Bonfire'), 1); remaining-- }
+  if (emberglow && p.fairies.includes('Emberglow') && remaining) { p.fairies.splice(p.fairies.indexOf('Emberglow'), 1); remaining-- }
   if (p.hand.length < remaining) throw new Error('Not enough Camp cards')
   // Spend singles first, preserving matching pairs when possible.
   while (remaining--) { const card = p.hand.find(c => p.hand.filter(x => x === c).length % 2 === 1) ?? p.hand[0]; p.hand.splice(p.hand.indexOf(card), 1); g.campDiscard.push(card) }
@@ -174,7 +174,7 @@ function pay(g: Game, p: Player, cost: number, cloud?: boolean, bonfire?: boolea
 export function legalSlots(g: Game, player = actor(g)): Slot[] {
   if (player === null || g.phase !== 'explore' || g.afterPlace || g.pendingDraws) return []
   const p = g.players[player]
-  return g.slots.filter(s => s.player === null && (s.cost <= p.hand.length || p.fairies.includes('Cloud') || (p.fairies.includes('Bonfire') && s.cost <= p.hand.length + 1)))
+  return g.slots.filter(s => s.player === null && (s.cost <= p.hand.length || p.fairies.includes('Moonveil') || (p.fairies.includes('Emberglow') && s.cost <= p.hand.length + 1)))
 }
 function checkGoals(g: Game, playerId: number) {
   const p = g.players[playerId]
@@ -214,12 +214,12 @@ function takePearl(g: Game, player: number, source: Pearl[], index: number, swap
   if (p.alpaca.length >= 6) source.push(p.alpaca.splice(swapIndex!, 1)[0])
   p.alpaca.push(picked); checkGoals(g, player)
 }
-export function pairAvailable(p: Player, card: Camp) { const count = p.hand.filter(c => c === card).length; return count >= 2 || (count >= 1 && p.fairies.includes('Bonfire')) }
+export function pairAvailable(p: Player, card: Camp) { const count = p.hand.filter(c => c === card).length; return count >= 2 || (count >= 1 && p.fairies.includes('Emberglow')) }
 function discardPair(g: Game, p: Player, card: Camp) {
-  if (!pairAvailable(p, card)) throw new Error(`Need a ${card} pair or a Bonfire`)
+  if (!pairAvailable(p, card)) throw new Error(`Need a ${card} pair or a Emberglow`)
   const count = p.hand.filter(c => c === card).length >= 2 ? 2 : 1
   for (let i = 0; i < count; i++) p.hand.splice(p.hand.indexOf(card), 1)
-  if (count === 1) p.fairies.splice(p.fairies.indexOf('Bonfire'), 1)
+  if (count === 1) p.fairies.splice(p.fairies.indexOf('Emberglow'), 1)
   g.campDiscard.push(...copies(card, count))
 }
 function completeRecruit(g: Game) {
@@ -245,18 +245,18 @@ export function reduceGame(current: Game, action: Action & { decision?: Decision
   } else if (g.phase === 'explore') {
     if (action.type === 'place') {
       if (!legalSlots(g).some(s => s.id === action.slot)) throw new Error('Illegal placement')
-      const s = slot(g, action.slot); pay(g, p, Math.max(0, s.cost), action.cloud, action.bonfire); s.player = playerId
+      const s = slot(g, action.slot); pay(g, p, Math.max(0, s.cost), action.moonveil, action.emberglow); s.player = playerId
       for (const site of g.fairySites.filter(site => site.section === s.section)) { p.fairies.push(...site.fairies); site.fairies = [] }
       g.afterPlace = true
       if (s.cost < 0) g.pendingDraws = { player: playerId, count: 1 }
       record(`${p.name} placed at ${slotLabel(s)}${s.cost > 0 ? ` for ${s.cost} cards` : ''}.`)
-    } else if (action.type === 'pair' && g.afterPlace && ['Banner', 'Lantern', 'Provisions'].includes(action.card)) {
+    } else if (action.type === 'pair' && g.afterPlace && ['Trail Pennant', 'Glowstone Lamp', 'Wonder Basket'].includes(action.card)) {
       discardPair(g, p, action.card)
-      if (action.card === 'Banner') {
+      if (action.card === 'Trail Pennant') {
         const index = g.track.findIndex((x, i) => i > g.exploreTurn && x === playerId)
         if (index < 0) throw new Error('No unplaced token')
         g.track.splice(index, 1); g.track.splice(g.exploreTurn + 1, 0, playerId)
-      } else if (action.card === 'Lantern') {
+      } else if (action.card === 'Glowstone Lamp') {
         const fairySite = g.fairySites.find(site => site.id === action.target && site.fairies.length)
         if (!fairySite) throw new Error('Choose a Fairy on the board')
         p.fairies.push(fairySite.fairies.shift()!)
@@ -279,8 +279,8 @@ export function reduceGame(current: Game, action: Action & { decision?: Decision
       const source = catchableAt(g, s, action.pearlIndex)
       takePearl(g, playerId, g.riverPearls[source.lane], source.index, action.swapIndex)
       if (action.extra && catchablePearls(g, s).length && !g.pendingExtra) {
-        if (action.extra === 'net') discardPair(g, p, 'Fishing Nets')
-        else { const i = p.fairies.indexOf('River'); if (i < 0) throw new Error('No River Fairy'); p.fairies.splice(i, 1) }
+        if (action.extra === 'pearlNet') discardPair(g, p, 'Pearl Net')
+        else { const i = p.fairies.indexOf('Dewdrop'); if (i < 0) throw new Error('No Dewdrop Fairy'); p.fairies.splice(i, 1) }
         g.pendingExtra = true
       } else {
         g.pendingExtra = false; g.track.unshift(playerId); s.player = null; g.collectIndex++; advanceCollection(g)
@@ -299,13 +299,13 @@ export function reduceGame(current: Game, action: Action & { decision?: Decision
       const v = g.display.splice(index, 1)[0]; p.villagers.push(v); if (v.reward) g.pendingDraws = { player: playerId, count: v.reward }
       g.recruitedThisSlot = true
       record(`${p.name} recruited ${v.name}.`)
-      // A Shamisen move can be chosen before this token is returned.
-      if (!pairAvailable(p, 'Shamisen')) completeRecruit(g)
-    } else if (action.type === 'shamisen') {
-      if (!g.recruitedThisSlot || !pairAvailable(p, 'Shamisen')) throw new Error('Recruit first and have a Shamisen pair')
+      // A Whisperstrings move can be chosen before this token is returned.
+      if (!pairAvailable(p, 'Whisperstrings')) completeRecruit(g)
+    } else if (action.type === 'whisperstrings') {
+      if (!g.recruitedThisSlot || !pairAvailable(p, 'Whisperstrings')) throw new Error('Recruit first and have a Whisperstrings pair')
       const from = slot(g, g.recruitQueue[g.recruitIndex]); const next = g.slots.find(s => s.kind === 'village' && s.group > from.group && s.player === null)
       if (!next) throw new Error('No later Village slot')
-      discardPair(g, p, 'Shamisen'); next.player = playerId; from.player = null; g.recruitQueue.splice(g.recruitIndex + 1, 0, next.id); g.recruitQueue = [...g.recruitQueue.slice(0, g.recruitIndex + 1), ...g.recruitQueue.slice(g.recruitIndex + 1).sort((a, b) => slot(g, a).group - slot(g, b).group)]; g.recruitIndex++; g.recruitedThisSlot = false; advanceRecruit(g); record(`${p.name} used Shamisen to visit another Village slot.`)
+      discardPair(g, p, 'Whisperstrings'); next.player = playerId; from.player = null; g.recruitQueue.splice(g.recruitIndex + 1, 0, next.id); g.recruitQueue = [...g.recruitQueue.slice(0, g.recruitIndex + 1), ...g.recruitQueue.slice(g.recruitIndex + 1).sort((a, b) => slot(g, a).group - slot(g, b).group)]; g.recruitIndex++; g.recruitedThisSlot = false; advanceRecruit(g); record(`${p.name} used Whisperstrings to visit another Village slot.`)
     } else if (action.type === 'skipRecruit') { completeRecruit(g); record(`${p.name} finished recruiting.`) }
     else throw new Error('Choose a Villager')
   } else if (g.phase === 'deliver') {
@@ -313,21 +313,21 @@ export function reduceGame(current: Game, action: Action & { decision?: Decision
       const v = p.villagers.find(v => v.id === action.villagerId); const pearl = p.alpaca[action.alpacaIndex]
       if (!v || !pearl || v.stored[action.socket] !== null || (v.sockets[action.socket] !== pearl && v.sockets[action.socket] !== 'any' && !v.wild.includes(action.socket))) throw new Error('Pearl does not fit')
       v.stored[action.socket] = p.alpaca.splice(action.alpacaIndex, 1)[0]; record(`${p.name} delivered ${pearl} to ${v.name}.`)
-    } else if (action.type === 'mushroom') {
-      const v = p.villagers.find(v => v.id === action.villagerId); if (!v || v.stored[action.socket] !== null || !p.fairies.includes('Mushroom')) throw new Error('Cannot use Mushroom')
-      p.fairies.splice(p.fairies.indexOf('Mushroom'), 1); v.wild.push(action.socket); record(`${p.name} made a ${v.name} socket wild.`)
-    } else if (action.type === 'breeze') {
+    } else if (action.type === 'wildbloom') {
+      const v = p.villagers.find(v => v.id === action.villagerId); if (!v || v.stored[action.socket] !== null || !p.fairies.includes('Wildbloom')) throw new Error('Cannot use Wildbloom')
+      p.fairies.splice(p.fairies.indexOf('Wildbloom'), 1); v.wild.push(action.socket); record(`${p.name} made a ${v.name} socket wild.`)
+    } else if (action.type === 'zephyr') {
       const v = p.villagers.find(v => v.id === action.villagerId)
       const sourceVillager = p.villagers.find(v => v.id === action.fromVillagerId)
       const pearl = sourceVillager ? sourceVillager.stored[action.fromSocket!] : p.alpaca[action.alpacaIndex!]
-      if (!v || !pearl || (!p.fairies.includes('Breeze') && g.breezeLeft === 0) || v.stored[action.socket] !== null || (v.sockets[action.socket] !== pearl && v.sockets[action.socket] !== 'any' && !v.wild.includes(action.socket))) throw new Error('Invalid Breeze move')
+      if (!v || !pearl || (!p.fairies.includes('Zephyr') && g.zephyrLeft === 0) || v.stored[action.socket] !== null || (v.sockets[action.socket] !== pearl && v.sockets[action.socket] !== 'any' && !v.wild.includes(action.socket))) throw new Error('Invalid Zephyr move')
       v.stored[action.socket] = pearl; if (sourceVillager) sourceVillager.stored[action.fromSocket!] = null; else p.alpaca.splice(action.alpacaIndex!, 1)
-      if (g.breezeLeft === 0) { p.fairies.splice(p.fairies.indexOf('Breeze'), 1); g.breezeLeft = 2 } else g.breezeLeft--
-      record(`${p.name} used Breeze to move ${pearl}. ${g.breezeLeft} moves remain.`)
-    } else if (action.type === 'endBreeze') {
-      g.breezeLeft = 0; record(`${p.name} finished the Breeze effect.`)
+      if (g.zephyrLeft === 0) { p.fairies.splice(p.fairies.indexOf('Zephyr'), 1); g.zephyrLeft = 2 } else g.zephyrLeft--
+      record(`${p.name} used Zephyr to move ${pearl}. ${g.zephyrLeft} moves remain.`)
+    } else if (action.type === 'endZephyr') {
+      g.zephyrLeft = 0; record(`${p.name} finished the Zephyr effect.`)
     } else if (action.type === 'doneDelivery') {
-      g.breezeLeft = 0
+      g.zephyrLeft = 0
       g.deliverPlayer++
       if (g.deliverPlayer >= g.players.length) {
         if (g.round === 5) { g.phase = 'finished'; record('The fifth round is complete. Final scores are ready.') }

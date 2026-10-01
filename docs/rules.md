@@ -14,7 +14,7 @@ The 2025 game is for 2–4 players and lasts five rounds. Players place three Tr
 - **Alpaca board:** a personal temporary holding area with six pearl spaces.
 - **Villager tiles:** one identical starting Villager instance per player and 26 recruitable tiles. A tile provides pearl spaces, a scoring ability, and a Camp-card reward shown on the tile.
 - **Camp cards:** a 50-card deck. Cards are both a spendable currency and, when played as a matching pair, a special action.
-- **Fairy tokens:** 25 single-use tokens: five each of Bonfire, Breeze, Cloud, Mushroom, and River.
+- **Fairy tokens:** 25 single-use tokens: five each of Emberglow, Zephyr, Moonveil, Wildbloom, and Dewdrop.
 - **Alpaca goals:** five public, one-time race objectives worth four points each.
 - **Floodgate:** holds the new round’s pearls at the river sources until Collection.
 
@@ -96,9 +96,9 @@ After placing a Tribe token and paying or gaining its cards, the active player m
 
 **Exploration-phase pairs**
 
-- **Banner:** after placing a Tribe token, move one of your other unplaced Tribe tokens to the top of the turn track. This changes which token acts next in Exploration and changes the order in which tokens are placed on the track after Collection.
-- **Lantern:** after placing a Tribe token, take one Fairy token from anywhere on the board into your play area.
-- **Provisions:** after placing a Tribe token, move one of your other Tribe tokens already on the board from its current section to another legal empty slot/section. The moved token does not pay the destination’s Camp-card cost. The card says “move,” not “place”; the normal placement trigger for collecting adjacent Fairies is not repeated by the move.
+- **Trail Pennant:** after placing a Tribe token, move one of your other unplaced Tribe tokens to the top of the turn track. This changes which token acts next in Exploration and changes the order in which tokens are placed on the track after Collection.
+- **Glowstone Lamp:** after placing a Tribe token, take one Fairy token from anywhere on the board into your play area.
+- **Wonder Basket:** after placing a Tribe token, move one of your other Tribe tokens already on the board from its current section to another legal empty slot/section. The moved token does not pay the destination’s Camp-card cost. The card says “move,” not “place”; the normal placement trigger for collecting adjacent Fairies is not repeated by the move.
 
 Players may play multiple pairs after one placement, in any order, if they can pay each pair.
 
@@ -116,7 +116,7 @@ Resolve the river board from the top row to the bottom row. Within each row, res
 
 When a token’s section is resolved:
 
-1. If one or more pearls are stopped there, its owner chooses one and moves it to their Alpaca. Each Fishing Net pair or River Fairy used at that collection can give one additional pearl from that same river section, subject to the pearls available there.
+1. If one or more pearls are stopped there, its owner chooses one and moves it to their Alpaca. Each Pearl Net pair or Dewdrop Fairy used at that collection can give one additional pearl from that same river section, subject to the pearls available there.
 2. If the Alpaca already holds six pearls, the player may exchange a pearl on the Alpaca for a pearl stopped at that section instead of adding a seventh pearl. For an extra pearl, continue to use an available Alpaca space or make an allowed exchange.
 3. Check the public Alpaca goals whenever the player’s Alpaca meets an unclaimed goal requirement. The first player to meet a goal takes that card, flips it to its four-point side, and keeps it. Keep the qualifying pearls on the Alpaca for now; they may be delivered to Villagers later.
 4. Remove the Tribe token so any unclaimed pearls continue downstream to the next token or the Lake. Put the token on the lowest currently empty position of the turn track.
@@ -133,7 +133,7 @@ If no Tribe token is at the Lake, all pearls there remain for later rounds.
 
 After every river and Lake token has been resolved, scan the Village from its leftmost slot to its rightmost slot. Whenever a slot contains a Tribe token, that token’s owner chooses one of the face-up Villager tiles, adds it to their play area, and immediately takes the number of Camp cards shown in the tile’s upper-left corner. Take those cards from the market or deck using the normal card-gain rules. Do not refill the Villager display yet. Return the Tribe token to the lowest empty turn-track position.
 
-**Shamisen pair:** during Collection, after recruiting a Villager, move the recruiting Tribe token to the next available Village slot to its right. This can enable another recruitment later in the left-to-right Village scan. Each Shamisen pair may be used once after a recruitment; it is not an additional Camp-card cost.
+**Whisperstrings pair:** during Collection, after recruiting a Villager, move the recruiting Tribe token to the next available Village slot to its right. This can enable another recruitment later in the left-to-right Village scan. Each Whisperstrings pair may be used once after a recruitment; it is not an additional Camp-card cost.
 
 ### 5. Deliver pearls to Villagers
 
@@ -141,18 +141,18 @@ After recruitment, players may simultaneously move any number of pearls from the
 
 - A pearl must match the color printed around its Villager space.
 - A rainbow/multicolor space accepts any pearl.
-- A pearl on a Villager stays there for the rest of the game, except when moved by a Breeze Fairy.
+- A pearl on a Villager stays there for the rest of the game, except when moved by a Zephyr Fairy.
 - Players do not have to move every pearl from their Alpaca. Alpaca capacity remains six, so pearls left there occupy space for the next round and do not score at game end.
 
 ## Fairy abilities
 
 Fairies are single-use. To use one, discard it from the game after applying its effect. Keep unused Fairies in the player area; some Villager tiles score them.
 
-- **Bonfire:** counts as one Camp card of any type. It may pay one card of a placement cost or substitute for either card in a matching pair.
-- **Breeze:** move up to three pearls from your Alpaca or Villager tile(s) to other Villager tile(s). It can clear Alpaca space or rearrange pearls between Villagers. It cannot move a pearl back from a Villager to the Alpaca.
-- **Cloud:** ignore all Camp-card costs for one Tribe-token placement.
-- **Mushroom:** make one Villager pearl space wild so it can hold any pearl color. The text does not give a duration. For a digital implementation, treat the space as wild for the rest of the game after using the Fairy; this is the interpretation that preserves the “make a space wild” effect after the token is discarded.
-- **River:** when collecting a pearl from a river section, collect one additional pearl from that same section, if available.
+- **Emberglow:** counts as one Camp card of any type. It may pay one card of a placement cost or substitute for either card in a matching pair.
+- **Zephyr:** move up to three pearls from your Alpaca or Villager tile(s) to other Villager tile(s). It can clear Alpaca space or rearrange pearls between Villagers. It cannot move a pearl back from a Villager to the Alpaca.
+- **Moonveil:** ignore all Camp-card costs for one Tribe-token placement.
+- **Wildbloom:** make one Villager pearl space wild so it can hold any pearl color. The text does not give a duration. For a digital implementation, treat the space as wild for the rest of the game after using the Fairy; this is the interpretation that preserves the “make a space wild” effect after the token is discarded.
+- **Dewdrop:** when collecting a pearl from a river section, collect one additional pearl from that same section, if available.
 
 ## Scoring after round five
 
@@ -194,8 +194,7 @@ These are bounded ambiguities in the published text. The preceding rules give ex
 
 - **Villager market exhaustion:** reveal up to six tiles. If the recruitable deck and face-up unclaimed tiles are exhausted, no further Villager can be recruited.
 - **Camp deck exhaustion:** the rules describe recycling the discard pile when the market reaches three identical cards, but do not clearly state what to do if a draw is requested while the deck is empty and that condition has not occurred. Recommended implementation: shuffle the Camp discard pile into a new deck whenever a draw is required and the deck is empty; if both are empty, the player gains no card.
-- **Shamisen chaining:** the card text says the token moves to a later Village slot so it can recruit again “later.” Resolve it again only if the moved token is in a slot that has not yet been scanned in the current left-to-right Village pass.
-- **Mushroom duration:** apply the wild-space change permanently for the rest of the game, as stated above.
+- **Whisperstrings chaining:** the card text says the token moves to a later Village slot so it can recruit again “later.” Resolve it again only if the moved token is in a slot that has not yet been scanned in the current left-to-right Village pass.
+- **Wildbloom duration:** apply the wild-space change permanently for the rest of the game, as stated above.
 - **Geometry:** the rules prescribe row-by-row, left-to-right collection but do not publish a coordinate/edge table for software. Encode the actual printed board’s sections and their downstream connections as data; do not infer those connections from artwork alone.
 - **Empty river slots during Collection:** the rules explain what happens when a token catches pearls but do not separately spell out an empty catch. Return a token with no pearl when its section is resolved, so every placed token resets for the next round.
-

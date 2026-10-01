@@ -88,16 +88,16 @@ For each unclaimed Alpaca goal, value the four-point reward and the likelihood t
 Any Camp card can pay any placement cost. Spending a card also removes it from a pair that could activate an action. The bot should compare the cost of a higher/upstream slot with the pair-action opportunity it gives up.
 
 - Keep useful matching pairs when their expected action value exceeds the benefit of spending the cards for a placement.
-- Use a **Banner** pair when moving an unplaced token to the top of the turn track gives a needed immediate turn or changes access to a contested slot.
-- Use a **Lantern** pair to take the Fairy with the highest current value, considering its timing and the remaining game.
-- Use a **Provisions** pair to rescue or improve an already placed token without paying the destination cost. The move is especially useful when an opponent’s placement changes the expected pearls, when access to the Lake or Village changes, or when a better downstream/upstream position becomes available.
-- Use a **Fishing Net** pair on a river section with an extra pearl worth taking and enough Alpaca capacity or exchange flexibility.
-- Use a **Shamisen** pair after a recruitment when another face-up Villager is valuable and a later Village slot remains to be resolved.
-- A **Bonfire Fairy** is a flexible Camp card, including one half of a matching pair.
-- A **Cloud Fairy** saves all Camp-card cost for one placement, so prefer using it on an expensive river or priority Village slot.
-- A **River Fairy** adds one pearl at a river collection. Use it where a second pearl is available and useful.
-- A **Mushroom Fairy** can make a mismatched Villager socket wild. Use it to store a pearl that would otherwise remain stranded on the Alpaca.
-- A **Breeze Fairy** can move up to three pearls from the Alpaca or between Villagers. It is most valuable when it frees Alpaca space or makes a tile bonus achievable.
+- Use a **Trail Pennant** pair when moving an unplaced token to the top of the turn track gives a needed immediate turn or changes access to a contested slot.
+- Use a **Glowstone Lamp** pair to take the Fairy with the highest current value, considering its timing and the remaining game.
+- Use a **Wonder Basket** pair to rescue or improve an already placed token without paying the destination cost. The move is especially useful when an opponent’s placement changes the expected pearls, when access to the Lake or Village changes, or when a better downstream/upstream position becomes available.
+- Use a **Pearl Net** pair on a river section with an extra pearl worth taking and enough Alpaca capacity or exchange flexibility.
+- Use a **Whisperstrings** pair after a recruitment when another face-up Villager is valuable and a later Village slot remains to be resolved.
+- A **Emberglow Fairy** is a flexible Camp card, including one half of a matching pair.
+- A **Moonveil Fairy** saves all Camp-card cost for one placement, so prefer using it on an expensive river or priority Village slot.
+- A **Dewdrop Fairy** adds one pearl at a river collection. Use it where a second pearl is available and useful.
+- A **Wildbloom Fairy** can make a mismatched Villager socket wild. Use it to store a pearl that would otherwise remain stranded on the Alpaca.
+- A **Zephyr Fairy** can move up to three pearls from the Alpaca or between Villagers. It is most valuable when it frees Alpaca space or makes a tile bonus achievable.
 
 ### Turn-order value
 
@@ -108,7 +108,7 @@ Include that reversal in the placement value:
 - Early river sections often give better pearl selection now but usually resolve earlier, pushing that token later in next round’s order.
 - Downstream sections and the Lake may resolve later, improving next-round priority.
 - A Village token’s order is determined by its left-to-right Village slot scan.
-- Banner pairs can change the order of still-unplaced tokens during Exploration.
+- Trail Pennant pairs can change the order of still-unplaced tokens during Exploration.
 
 Do not optimize turn order in isolation. A small initiative gain is not worth giving away a high-value pearl or a needed Villager.
 
@@ -132,7 +132,7 @@ At each Exploration turn:
 4. Choose the placement with the highest total marginal score, including future storage.
 5. Pay with cards that least reduce useful matching pairs. If possible, retain a pair that can still be played after receiving the placement’s card reward.
 6. Collect all Fairies triggered by a new river placement.
-7. After placement and card payment/reward, choose available matching pairs in a sequence that preserves later options. Recompute the board after Provisions or Banner.
+7. After placement and card payment/reward, choose available matching pairs in a sequence that preserves later options. Recompute the board after Wonder Basket or Trail Pennant.
 8. During Collection, choose pearl colors that maximize score and complete goals while preserving enough Alpaca capacity for later tokens.
 9. At the Lake, take the best pearls that fit; exchange pearls if doing so improves the tableau or a goal.
 10. Recruit the best available Villager in slot order and take its Camp reward.

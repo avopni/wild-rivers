@@ -81,7 +81,7 @@ River section cost becomes cheaper downstream. The rules summarize the river cos
 - Within a multi-slot section, the topmost token resolves first.
 - Across sections in the same row, resolve from left to right; then proceed to the next row downstream.
 - As each token resolves, return it to the bottommost open turn-track space. Since tokens are inserted in this order, later-resolving tokens are higher on the track and act earlier in the next round.
-- A River token collects one pearl by default. A Fishing Net pair or River Fairy can add one pearl for that collection. The Lake token can collect any or all Lake pearls.
+- A River token collects one pearl by default. A Pearl Net pair or Dewdrop Fairy can add one pearl for that collection. The Lake token can collect any or all Lake pearls.
 - Alpaca capacity is six. A player can exchange a pearl already on the Alpaca with one caught at a river section; at the Lake, the player can exchange an equal number of Alpaca pearls for Lake pearls.
 - Empty Alpaca space has strategic value. A pearl left on the Alpaca can support a goal temporarily but scores zero at game end.
 
@@ -91,11 +91,11 @@ The 2025 rulebook names five Camp-card types. All Camp cards can pay any placeme
 
 | Type | Effect | Timing |
 |---|---|---|
-| Banner | After placing a Tribe token, move one of your other unplaced tokens to the top of the turn track | Exploration |
-| Lantern | After placing a Tribe token, take one Fairy from anywhere on the board | Exploration |
-| Provisions | After placing a Tribe token, move one of your other board tokens to another section without paying its Camp cost | Exploration |
-| Fishing Nets | When collecting from a river section, take one additional pearl there | Collection |
-| Shamisen | After recruiting a Villager, move the recruiting token to the next available Village slot to its right, enabling a later recruitment | Collection |
+| Trail Pennant | After placing a Tribe token, move one of your other unplaced tokens to the top of the turn track | Exploration |
+| Glowstone Lamp | After placing a Tribe token, take one Fairy from anywhere on the board | Exploration |
+| Wonder Basket | After placing a Tribe token, move one of your other board tokens to another section without paying its Camp cost | Exploration |
+| Pearl Net | When collecting from a river section, take one additional pearl there | Collection |
+| Whisperstrings | After recruiting a Villager, move the recruiting token to the next available Village slot to its right, enabling a later recruitment | Collection |
 
 The component list confirms 50 Camp cards and the rules name these five types. The accessible rulebook text does **not** provide a copy count for each type. Do not assume ten copies of each without checking the physical deck or a complete component image.
 
@@ -113,11 +113,11 @@ There are 25 Fairy tokens in five types. For the app’s canonical component set
 
 | Fairy | Count | Effect |
 |---|---|
-| Bonfire | 5 | Counts as one Camp card of any type, for a placement payment or as either half of a matching pair |
-| Breeze | 5 | Move up to three pearls from the Alpaca or Villager tiles to other Villager tiles |
-| Cloud | 5 | Ignore all Camp-card costs for one Tribe-token placement |
-| Mushroom | 5 | Make one Villager pearl space wild |
-| River | 5 | Collect one additional pearl from a river section when collecting there |
+| Emberglow | 5 | Counts as one Camp card of any type, for a placement payment or as either half of a matching pair |
+| Zephyr | 5 | Move up to three pearls from the Alpaca or Villager tiles to other Villager tiles |
+| Moonveil | 5 | Ignore all Camp-card costs for one Tribe-token placement |
+| Wildbloom | 5 | Make one Villager pearl space wild |
+| Dewdrop | 5 | Collect one additional pearl from a river section when collecting there |
 
 The app shuffles the full 25-token multiset and draws without replacement. Before any Fairy has been drawn, each type has probability 5/25 = 20%; after each draw, calculate the next probability from that type’s remaining count over the remaining supply.
 

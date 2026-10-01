@@ -36,7 +36,7 @@ export function analyzePlacements(g: Game, playerId = actor(g)): Analysis[] {
     if (s.cost < 0) { value += 1.3; factors.push('Gain a Camp card') }
     if (s.cost > 0) factors.push(`Costs ${s.cost} Camp card${s.cost === 1 ? '' : 's'}`)
     if (p.alpaca.length >= 5 && s.kind !== 'village') { value -= 1.8; factors.push('Alpaca storage is nearly full') }
-    return { action: { type: 'place' as const, slot: s.id, cloud: s.cost > p.hand.length && p.fairies.includes('Cloud'), bonfire: s.cost > p.hand.length && !p.fairies.includes('Cloud') }, score: value,
+    return { action: { type: 'place' as const, slot: s.id, moonveil: s.cost > p.hand.length && p.fairies.includes('Moonveil'), emberglow: s.cost > p.hand.length && !p.fairies.includes('Moonveil') }, score: value,
       factors, summary: `${slotLabel(s)}: current policy estimates ${value.toFixed(1)} value.`, policy: POLICY_VERSION,
       uncertainty: s.kind === 'river' ? 'Visible pearl path is certain; future placements are estimated.' : 'Future choices and draws can change this estimate.' }
   }).sort((a, b) => b.score - a.score || (a.action.type === 'place' && b.action.type === 'place' ? a.action.slot.localeCompare(b.action.slot) : 0))
@@ -75,7 +75,7 @@ export function chooseBotAction(g: Game): Action | null {
     const ranked = source.map((c, i) => ({ i, value: spaceValue(g, id, c) + goalProgress(g, id, c) })).sort((a, b) => b.value - a.value)
     const low = p.alpaca.map((c, i) => ({ i, value: spaceValue(g, id, c) + goalProgress(g, id, c) })).sort((a, b) => a.value - b.value)[0]
     if (p.alpaca.length >= 6 && (!low || ranked[0].value <= low.value)) return { type: 'skipCollect' }
-    const extra = g.phase === 'collect' && !g.pendingExtra && source.length > 1 && p.alpaca.length < 5 ? p.fairies.includes('River') ? 'river' : pairAvailable(p, 'Fishing Nets') ? 'net' : undefined : undefined
+    const extra = g.phase === 'collect' && !g.pendingExtra && source.length > 1 && p.alpaca.length < 5 ? p.fairies.includes('Dewdrop') ? 'dewdrop' : pairAvailable(p, 'Pearl Net') ? 'pearlNet' : undefined : undefined
     return { type: 'collect', pearlIndex: ranked[0].i, swapIndex: p.alpaca.length >= 6 ? low?.i : undefined, extra }
   }
   if (g.phase === 'recruit') {

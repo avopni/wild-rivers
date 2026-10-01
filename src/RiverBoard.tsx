@@ -1,159 +1,57 @@
 import { motion, useReducedMotion } from 'motion/react'
-import type { Game, Pearl, Slot } from './game'
-import { makeRiverSections, slotLabel } from './game'
-import { markerPoint, scenePearls, type PearlMove, type Presentation } from './presentation'
+import { makeRiverSections, slotLabel, type Game, type Slot } from './game'
+import { boardLayout } from './boardLayout'
+import { fairyPoint, laneX, markerPoint, preparationGame, preparationStep, riverTiers, scenePearls, sectionX, type PearlMove, type Presentation } from './presentation'
 
-const playerColors = ['#e17b62', '#6e9e9d', '#d0a04a', '#9b85b4']
-const pearlColors: Record<string, string> = { green: '#77ae72', blue: '#5dadd1', pink: '#e69ab0', purple: '#9273b9', white: '#fffaf0' }
-const tiers = [165, 260, 360, 460, 550]
-const tierLabels = ['−3', '−2', '−1', '0', '+1']
-
-type Edge = { id: string; x1: number; y1: number; x2: number; y2: number; width: number }
-function flowEdges(activeChannels: number, x: (lane: number) => number): Edge[] {
-  const sections = makeRiverSections()
-  const edges = new Map<string, Edge>()
-  const center = (lanes: number[]) => {
-    const visible = lanes.filter(lane => lane < activeChannels)
-    return (x(visible[0]) + x(visible.at(-1)!)) / 2
-  }
-  for (let lane = 0; lane < activeChannels; lane++) {
-    let from = { key: `source-${lane}`, size: 1, center: x(lane) }
-    for (let row = 0; row < 5; row++) {
-      const section = sections.find(section => section.row === row && section.lanes.includes(lane))!
-      const to = { key: section.id, size: section.lanes.filter(lane => lane < activeChannels).length, center: center(section.lanes) }
-      const id = `${from.key}>${to.key}`
-      if (!edges.has(id)) edges.set(id, { id, x1: from.center, y1: row === 0 ? 105 : tiers[row - 1], x2: to.center, y2: tiers[row], width: Math.min(38, 14 + from.size * 4) })
-      from = to
-    }
-    const id = `lake:${from.key}`
-    if (!edges.has(id)) edges.set(id, { id, x1: from.center, y1: tiers[4], x2: 450, y2: 633, width: 38 })
-  }
-  return [...edges.values()]
-}
-function path(edge: Edge) {
-  const middle = (edge.y1 + edge.y2) / 2
-  return `M ${edge.x1} ${edge.y1} C ${edge.x1} ${middle}, ${edge.x2} ${middle}, ${edge.x2} ${edge.y2}`
-}
-function fairyIcon(fairy: string) { return ({ Bonfire: '✦', Breeze: '↝', Cloud: '☁', Mushroom: '♣', River: '≈' } as Record<string, string>)[fairy] }
-
-function RiverPearl({ move, selected, choose, reduced }: { move: PearlMove; selected: boolean; choose?: () => void; reduced: boolean }) {
-  const { pearl, route } = move
-  const lengths = route.map((point, index) => index ? Math.hypot(point.x - route[index - 1].x, point.y - route[index - 1].y) : 0)
-  const length = lengths.reduce((a, b) => a + b, 0)
-  let progress = 0
-  const times = lengths.map((part, index) => { progress += part; return length ? progress / length : index / Math.max(1, route.length - 1) })
+const tribes = ['#c8795b', '#518f91', '#c39b43', '#9d82b2']
+const pearlColors = { green: '#65b777', blue: '#58b1da', pink: '#dc8da9', purple: '#a775c4', white: '#fffaf0' }
+export const fairySymbol = (fairy: string) => ({ Emberglow: '✦', Zephyr: '❧', Moonveil: '☁', Wildbloom: '♧', Dewdrop: '≈' } as Record<string, string>)[fairy]
+function RiverPearl({ move, choose, selected, reduced }: { move: PearlMove; choose?: () => void; selected: boolean; reduced: boolean }) {
   const moving = !reduced && move.duration > 0
-  return <motion.g className={`river-pearl ${choose ? 'pearl-action' : ''}`} data-scene-pearl={pearl.id}
-    initial={{ x: pearl.point.x, y: pearl.point.y, opacity: move.arrive && !reduced ? 0 : 1 }}
-    animate={{ x: moving ? route.map(point => point.x) : move.to.x, y: moving ? route.map(point => point.y) : move.to.y, opacity: move.disappear ? 0 : 1 }}
-    transition={{ duration: reduced ? 0 : move.duration, delay: reduced ? 0 : move.delay, ease: 'linear', times, opacity: { duration: .16, delay: reduced ? 0 : move.delay } }}
-    role={choose ? 'button' : undefined} tabIndex={choose ? 0 : undefined} aria-label={choose ? `Choose ${pearl.color} pearl` : undefined} aria-pressed={choose ? selected : undefined}
-    onClick={choose} onKeyDown={event => { if (choose && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); choose() } }}>
-    <title>{`${pearl.color} pearl`}</title>
-    {choose && <circle r="14" fill="transparent"/>}
-    {selected && <circle r="12" fill="none" stroke="#f8ce78" strokeWidth="3"/>}
-    <circle cy="2" r={pearl.atLake ? 5 : 8} fill="#264f57" opacity=".22"/>
-    <circle r={pearl.atLake ? 5 : 8} fill={`url(#pearl-${pearl.color})`} stroke="#fff8e7" strokeWidth="1.2"/>
-    <ellipse cx="-2" cy="-3" rx={pearl.atLake ? 1.5 : 2.5} ry="1.5" fill="#fff" opacity=".8"/>
+  const lengths = move.route.map((p, i) => i ? Math.hypot(p.x - move.route[i - 1].x, p.y - move.route[i - 1].y) : 0)
+  const total = lengths.reduce((a, b) => a + b, 0); let progress = 0
+  const times = lengths.map((length, i) => { progress += length; return total ? progress / total : i / Math.max(1, lengths.length - 1) })
+  return <motion.g data-scene-pearl={move.pearl.id} className={`river-pearl ${choose ? 'board-action' : ''}`} initial={{ x: move.pearl.point.x, y: move.pearl.point.y, opacity: move.arrive && !reduced ? 0 : 1 }} animate={{ x: moving ? move.route.map(p => p.x) : move.to.x, y: moving ? move.route.map(p => p.y) : move.to.y, opacity: move.disappear ? 0 : 1 }} transition={{ duration: reduced ? 0 : move.duration, delay: reduced ? 0 : move.delay, ease: 'linear', times }} role={choose ? 'button' : undefined} tabIndex={choose ? 0 : undefined} aria-label={`Choose ${move.pearl.color} pearl`} aria-pressed={selected} onClick={choose} onKeyDown={e => { if (choose && ['Enter', ' '].includes(e.key)) { e.preventDefault(); choose() } }}>
+    <title>{move.pearl.color} pearl</title>{choose && <circle r="25" fill="transparent"/>}{selected && <circle r="18" fill="none" stroke="#ffdf99" strokeWidth="4"/>}<circle r={move.pearl.atLake ? 8 : 13} fill={`url(#p-${move.pearl.color})`} stroke="#fbf0cf" strokeWidth="1.5"/><ellipse cx="-4" cy="-5" rx="4" ry="2" fill="#fff" opacity=".9"/>
   </motion.g>
 }
-
-export function RiverBoard({ game: inputGame, legal, choose, presentation, selectedPearl, onPearlSelect, animations = true }: { game: Game; legal: Set<string>; choose: (slot: Slot) => void; presentation?: Presentation | null; selectedPearl?: number | null; onPearlSelect?: (index: number) => void; animations?: boolean }) {
-  const game = presentation?.after ?? inputGame
-  const reduced = !!useReducedMotion() || !animations
-  const pearls = presentation?.moves ?? scenePearls(game).map(pearl => ({ pearl, to: pearl.point, route: [pearl.point], duration: 0, delay: 0 }))
-  const currentSlot = inputGame.phase === 'collect' ? inputGame.slots.find(slot => slot.id === inputGame.collectQueue[inputGame.collectIndex]) : undefined
-  const availablePearls = scenePearls(inputGame).filter(pearl => inputGame.phase === 'lake' ? pearl.lane === null : pearl.lane !== null && currentSlot?.lanes.includes(pearl.lane)).sort((a, b) => (a.lane ?? 0) - (b.lane ?? 0) || a.index - b.index)
-  const channels = game.players.length * 3
-  const x = (lane: number) => 88 + (lane + .5) * 724 / channels
-  const sections = makeRiverSections().filter(section => section.lanes.some(lane => lane < channels))
-  const sectionCenter = (lanes: number[]) => {
-    const visible = lanes.filter(lane => lane < channels)
-    return (x(visible[0]) + x(visible.at(-1)!)) / 2
+export function RiverBoard({ game: input, legal, choose, presentation, selectedPearl, onPearlSelect, animations = true }: { game: Game; legal: Set<string>; choose: (slot: Slot) => void; presentation?: Presentation | null; selectedPearl?: number | null; onPearlSelect?: (index: number) => void; animations?: boolean }) {
+  const game = presentation?.preparation ? preparationGame(presentation) : presentation?.after ?? input
+  const reduced = !!useReducedMotion() || !animations, channels = game.players.length * 3, step = preparationStep(presentation)
+  const layout = boardLayout(game.players.length)
+  const sections = makeRiverSections().filter(s => s.lanes.some(l => l < channels))
+  const currentSlot = input.phase === 'collect' ? input.slots.find(s => s.id === input.collectQueue[input.collectIndex]) : undefined
+  const available = scenePearls(input).filter(p => input.phase === 'lake' ? p.lane === null : p.lane !== null && currentSlot?.lanes.includes(p.lane)).sort((a, b) => (a.lane ?? 0) - (b.lane ?? 0) || a.index - b.index)
+  const pearls = presentation && (!presentation.preparation || step?.kind === 'pearls') ? presentation.moves : scenePearls(game).map(pearl => ({ pearl, to: pearl.point, route: [pearl.point], duration: 0, delay: 0 }))
+  const edges = new Map<string, { d: string; row: number }>()
+  for (let lane = 0; lane < channels; lane++) {
+    let from = { x: laneX(lane, channels), y: 177 }
+    sections.filter(s => s.lanes.includes(lane)).forEach(s => {
+      const to = { x: sectionX(s.lanes, channels), y: riverTiers[s.row] }, mid = (from.y + to.y) / 2
+      edges.set(`${from.x}-${from.y}-${to.x}-${to.y}`, { d: `M${from.x} ${from.y} C${from.x} ${mid} ${to.x} ${mid} ${to.x} ${to.y}`, row: s.row }); from = to
+    })
   }
-  const edges = flowEdges(channels, x)
-  const lake = game.slots.find(slot => slot.id === 'lake')!
-  const village = game.slots.filter(slot => slot.kind === 'village')
-  const button = (slot: Slot, cx: number, cy: number, radius = 16) => {
-    const available = legal.has(slot.id)
-    return <g key={slot.id} className={available ? 'board-action' : ''} role={available ? 'button' : undefined} tabIndex={available ? 0 : undefined}
-      aria-label={`${slotLabel(slot)}${slot.player === null ? ', empty' : `, occupied by ${game.players[slot.player].name}`}`}
-      onClick={() => choose(slot)} onKeyDown={event => { if (available && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); choose(slot) } }}>
-      <title>{`${slotLabel(slot)} · ${slot.player === null ? 'Empty' : game.players[slot.player].name}`}</title>
-      {available && <circle cx={cx} cy={cy} r={radius + 5} fill="#f8d984" opacity=".5"/>}
-      <circle cx={cx} cy={cy} r={radius} fill={slot.player !== null ? playerColors[slot.player] : available ? '#fffaf0' : '#d8d6ca'} stroke={slot.player !== null ? '#fff7e8' : available ? '#a7834d' : '#9aa9a4'} strokeWidth="2.5"/>
-      <text x={cx} y={cy + 5} textAnchor="middle" className="svg-marker">{slot.player !== null ? slot.player + 1 : available ? '+' : '·'}</text>
+  function slotButton(slot: Slot) {
+    const point = markerPoint(slot, channels), active = legal.has(slot.id), occupied = slot.player !== null
+    const invisible = slot.kind === 'lake' && !active && !occupied
+    const action = presentation?.action
+    const moving = !reduced && (action?.type === 'place' && action.slot === slot.id || action?.type === 'pair' && action.card === 'Wonder Basket' && action.target?.split('>')[1] === slot.id)
+    return <g key={slot.id} data-river-slot={slot.kind === 'river' ? slot.id : undefined} data-village-slot={slot.kind === 'village' ? slot.id : undefined} data-lake-slot={slot.kind === 'lake' ? true : undefined} className={active ? 'board-action' : ''} role={active ? 'button' : undefined} tabIndex={active ? 0 : undefined} aria-label={`${slotLabel(slot)}, ${occupied ? game.players[slot.player!].name : 'empty'}`} onClick={() => { if (active) choose(slot) }} onKeyDown={e => { if (active && ['Enter', ' '].includes(e.key)) { e.preventDefault(); choose(slot) } }}>
+      <title>{slotLabel(slot)}</title><circle cx={point.x} cy={point.y} r={slot.kind === 'village' ? 30 : 27} fill="transparent"/>{active && <circle cx={point.x} cy={point.y} r={slot.kind === 'lake' ? 29 : 23} fill="none" stroke="#f3d18b" strokeWidth="3"/>}
+      <circle cx={point.x} cy={point.y} r={slot.kind === 'lake' ? 24 : slot.kind === 'village' ? 21 : layout.slotRadius} fill={invisible ? 'transparent' : occupied && !moving ? tribes[slot.player!] : '#e5d9b8'} stroke={invisible ? 'none' : active ? '#ffdca1' : '#8a805e'} strokeWidth="2"/>
+      {!invisible && !moving && <text x={point.x} y={point.y + 5} textAnchor="middle" fill={occupied ? '#fff4d4' : '#534c36'} fontSize="15">{occupied ? game.players[slot.player!].name.charAt(0).toUpperCase() : slot.kind === 'village' ? slot.group + 1 : ''}</text>}
+      {slot.kind === 'village' && <text x={point.x} y="956" textAnchor="middle" fill="#efe0c0" fontSize="15">{slot.cost ? `−${slot.cost} cards` : 'Free'}</text>}
     </g>
   }
-  return <div className="board-wrap" aria-busy={!!presentation}><svg className="board merged-board" viewBox="0 0 900 760" role="group" aria-label={`${channels} source channels merge through five placement tiers into the Lake`}>
-    <defs>
-      <linearGradient id="boardGround" x2="0" y2="1"><stop stopColor="#ddd2c2"/><stop offset=".5" stopColor="#efe7d4"/><stop offset="1" stopColor="#d8c9a9"/></linearGradient>
-      <linearGradient id="waterfall" x2="0" y2="1"><stop stopColor="#668c9a"/><stop offset="1" stopColor="#b4d8dd"/></linearGradient>
-      <linearGradient id="stream" x2="0" y2="1"><stop stopColor="#8bbdc7"/><stop offset="1" stopColor="#c3e6e6"/></linearGradient>
-      <radialGradient id="lakeWater"><stop stopColor="#d4eff0"/><stop offset="1" stopColor="#94c6cc"/></radialGradient>
-      <filter id="streamShadow"><feGaussianBlur stdDeviation="3"/></filter>
-      {(Object.entries(pearlColors) as [Pearl, string][]).map(([color, fill]) => <radialGradient key={color} id={`pearl-${color}`} cx="30%" cy="25%" r="80%"><stop stopColor="#fffdf5"/><stop offset=".35" stopColor={fill}/><stop offset="1" stopColor={fill} stopOpacity=".85"/></radialGradient>)}
-    </defs>
-    <rect width="900" height="760" rx="24" fill="url(#boardGround)"/>
-    <path d="M0 105 Q85 77 171 91 T340 84 T510 87 T680 82 T900 88 V0 H0Z" fill="#7b7182" opacity=".46"/>
-    <path d="M0 87 Q135 65 265 82 T520 75 T900 78 V0 H0Z" fill="#b78285" opacity=".52"/>
-    <path d="M0 105 Q130 94 245 99 T490 98 T735 95 T900 103 V72 Q690 57 480 67 T0 70Z" fill="url(#waterfall)"/>
-    <path d="M0 105 Q190 93 410 101 T900 103" fill="none" stroke="#e9f7ec" strokeWidth="5" opacity=".7"/>
-    <text x="24" y="33" className="svg-kicker">THE RIVER BOARD</text><text x="762" y="33" className="svg-kicker">ROUND {game.round} / 5</text>
-    <g aria-label={`Turn order: ${game.track.map(id => game.players[id].name).join(', ')}`}>
-      {game.track.map((id, index) => <g key={index} transform={`translate(${450 + (index - (game.track.length - 1) / 2) * 34} 28)`}>
-        <rect x="-14" y="-14" width="28" height="28" rx="6" fill={playerColors[id]} stroke="#fff6e6" strokeWidth="2"/>
-        <text y="5" textAnchor="middle" fontSize="15" fontWeight="800" fill="#fffaf0">{game.players[id].name.trim().charAt(0).toUpperCase()}</text>
-      </g>)}
-    </g>
-    <path d="M0 222 Q100 205 150 280 T350 320 Q300 440 60 420 L0 390Z" fill="#b9bea0" opacity=".24"/>
-    <path d="M900 185 Q805 214 774 300 T760 420 Q836 450 900 417Z" fill="#b7bf9d" opacity=".28"/>
-    {[...Array(10)].map((_, i) => <g key={i} transform={`translate(${30 + (i * 149) % 840} ${225 + (i * 83) % 280})`} opacity=".4"><path d="M0 0 8 -24 16 0Z" fill="#547b6e"/><path d="M3 -11 8 -32 13 -11Z" fill="#406b66"/><rect x="7" y="0" width="2" height="8" fill="#6d6250"/></g>)}
-    {edges.map(edge => <g key={edge.id}><path d={path(edge)} fill="none" stroke="#486c72" strokeWidth={edge.width + 9} opacity=".35" filter="url(#streamShadow)" strokeLinecap="round"/><path d={path(edge)} fill="none" stroke="#56858c" strokeWidth={edge.width + 5} strokeLinecap="round"/><path d={path(edge)} fill="none" stroke="url(#stream)" strokeWidth={edge.width} strokeLinecap="round"/><path d={path(edge)} fill="none" stroke="#e2f6f0" strokeWidth={Math.max(3, edge.width / 4)} opacity=".55" strokeLinecap="round"/></g>)}
-    {Array.from({ length: channels }, (_, lane) => <g key={lane}>
-      <path d={`M${x(lane)-10} 100 Q${x(lane)} 90 ${x(lane)+10} 100`} fill="none" stroke="#f3f4e7" strokeWidth="3"/>
-      <g aria-label={`Source ${String.fromCharCode(65 + lane)} sluice gate`}><rect x={x(lane)-14} y="121" width="4" height="16" rx="2" fill="#846d53"/><rect x={x(lane)+10} y="121" width="4" height="16" rx="2" fill="#846d53"/>
-        <motion.g initial={false} animate={{ y: game.phase === 'explore' ? 0 : -10, opacity: game.phase === 'explore' ? 1 : .15 }} transition={{ duration: reduced ? 0 : .3 }}><rect x={x(lane)-12} y="125" width="24" height="6" rx="2" fill="#735946" stroke="#ddc296" strokeWidth="1.5"/><path d={`M${x(lane)-8} 128 H${x(lane)+8}`} stroke="#b2946a" strokeWidth="1"/></motion.g>
-      </g>
-      <text x={x(lane)} y="84" textAnchor="middle" className="svg-source-label">{String.fromCharCode(65 + lane)}</text>
-    </g>)}
-    {tiers.map((y, row) => <g key={row}><rect x="22" y={y - 17} width="49" height="34" rx="10" fill="#fff7e5" stroke="#b9a57e"/><text x="46" y={y + 5} textAnchor="middle" className="svg-cost">{tierLabels[row]}</text></g>)}
-    {sections.map(section => {
-      const sectionSlots = game.slots.filter(slot => slot.section === section.id)
-      const center = sectionCenter(section.lanes)
-      const y = tiers[section.row]
-      const spacing = section.capacity === 1 ? 0 : 31
-      const width = Math.max(40, section.capacity * spacing + 16)
-      return <g key={section.id}>
-        <rect x={center - width / 2} y={y - 23} width={width} height="46" rx="23" fill="#eee5ce" stroke={currentSlot?.section === section.id ? '#bd944f' : '#8d9d93'} strokeWidth={currentSlot?.section === section.id ? 3 : 2} opacity=".94"/>
-        {sectionSlots.map(slot => button(slot, center + (slot.priority - (section.capacity - 1) / 2) * spacing, y, section.row === 0 && channels === 12 ? 13 : 15))}
-      </g>
-    })}
-    {game.fairySites.filter(site => sections.some(section => section.id === site.section)).map(site => {
-      const section = sections.find(section => section.id === site.section)!
-      const siblings = game.fairySites.filter(other => other.section === site.section)
-      const index = siblings.findIndex(other => other.id === site.id)
-      const center = sectionCenter(section.lanes) + (index - (siblings.length - 1) / 2) * 28
-      const y = tiers[section.row]
-      const iconY = y - 39
-      return <g key={site.id}>
-        <title>{`${site.kind === 'stump' ? 'Stump' : 'Rabbit'} ${site.id.slice(-1)}${site.fairies.length ? `: ${site.fairies.join(', ')}` : ''}`}</title>
-        <g opacity=".35"><circle cx={center} cy={iconY} r="15" fill={site.kind === 'stump' ? '#876d55' : '#f4e8d6'} stroke="#fff7dc" strokeWidth="2"/>
-        <text x={center} y={iconY + 5} textAnchor="middle" fontSize="18">{site.kind === 'stump' ? '🪵' : '🐇'}</text></g>
-        {site.fairies.map((fairy, i) => <g key={i}><circle cx={center + 13 + i * 13} cy={iconY - 13} r="10" fill="#f3d487" stroke="#fff7dc" strokeWidth="2"/><text x={center + 13 + i * 13} y={iconY - 9} textAnchor="middle" fontSize="12" fill="#695b49">{fairyIcon(fairy)}</text></g>)}
-      </g>
-    })}
-    <ellipse cx="450" cy="633" rx="119" ry="49" fill="#567a7d" opacity=".32"/>
-    <ellipse cx="450" cy="625" rx="111" ry="43" fill="url(#lakeWater)" stroke="#567e84" strokeWidth="5"/>
-    <text x="450" y="588" textAnchor="middle" className="svg-lake-label">THE LAKE · {scenePearls(game).filter(pearl => pearl.atLake).length}</text>
-    {button(lake, 450, 646, 17)}
-    <path d="M40 683 Q450 663 860 683 L860 748 L40 748Z" fill="#d3b98d" stroke="#9d8667" strokeWidth="3"/>
-    <text x="450" y="699" textAnchor="middle" className="svg-village-heading">VILLAGE</text>
-    {village.map(slot => <g key={slot.id} className={legal.has(slot.id) ? 'board-action' : ''} onClick={() => choose(slot)} role={legal.has(slot.id) ? 'button' : undefined} tabIndex={legal.has(slot.id) ? 0 : undefined} onKeyDown={event => { if (legal.has(slot.id) && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); choose(slot) } }}>
-      <rect x={90 + slot.group * 121} y="708" width="105" height="29" rx="9" fill={slot.player !== null ? playerColors[slot.player] : legal.has(slot.id) ? '#fff8e2' : '#e9dcc2'} stroke="#9e8763" strokeWidth="2"/>
-      <text x={142 + slot.group * 121} y="728" textAnchor="middle" className="svg-village">{slot.player !== null ? game.players[slot.player].name.slice(0, 8) : `V${slot.group + 1}${slot.cost ? ` · −${slot.cost}` : ''}`}</text>
-    </g>)}
-    {presentation?.removedMarkers.map(slot => { const point = markerPoint(slot, channels); return <motion.g key={`${presentation.id}-${slot.id}`} initial={{ x: point.x, y: point.y, opacity: 1, scale: 1 }} animate={{ y: point.y - 26, opacity: 0, scale: 1.15 }} transition={{ duration: reduced ? 0 : .3 }}><circle r="15" fill={playerColors[slot.player!]} stroke="#fff7e8" strokeWidth="2.5"/><text y="5" textAnchor="middle" className="svg-marker">{slot.player! + 1}</text></motion.g> })}
-    {pearls.map(move => { const index = availablePearls.findIndex(pearl => pearl.id === move.pearl.id); return <RiverPearl key={`${presentation?.id ?? 'rest'}-${move.pearl.id}`} move={move} reduced={reduced} selected={index >= 0 && selectedPearl === index} choose={!presentation && index >= 0 && onPearlSelect ? () => onPearlSelect(index) : undefined}/> })}
-  </svg><div className="board-footnote">{game.phase === 'explore' ? 'Pearls wait behind the source gates until collection begins.' : 'Pearls stop at the next occupied section. Returning a token releases the current.'}</div></div>
+  return <svg className="board" data-board-players={game.players.length} viewBox="0 0 1532 1080" preserveAspectRatio="none" role="group" aria-label={`${game.players.length}-player board: ${channels} source channels merge through five tiers into the Lake`}>
+    <defs><linearGradient id="water"><stop stopColor="#b0e8de"/><stop offset=".3" stopColor="#65b8c2"/><stop offset="1" stopColor="#408c9c"/></linearGradient><linearGradient id="platform" x2="0" y2="1"><stop stopColor="#b8aa86"/><stop offset=".4" stopColor="#656c58"/><stop offset="1" stopColor="#a89972"/></linearGradient>{Object.entries(pearlColors).map(([color, fill]) => <radialGradient key={color} id={`p-${color}`} cx="30%" cy="25%"><stop stopColor="#fff"/><stop offset=".3" stopColor={fill}/><stop offset="1" stopColor={fill} stopOpacity=".7"/></radialGradient>)}</defs>
+    {[...edges.values()].map((edge, i) => <g key={i}><path d={edge.d} fill="none" stroke="#153d3b" strokeWidth={28 + edge.row * 3} strokeLinecap="round"/><path d={edge.d} fill="none" stroke="url(#water)" strokeWidth={21 + edge.row * 3} strokeLinecap="round"/><path d={edge.d} fill="none" stroke="#d0f5ee" strokeWidth="2" strokeDasharray="19 14 8 27" opacity=".6"/></g>)}
+    <path data-lake-inlet="true" d="M770 692 V760" fill="none" stroke="#75c1c6" strokeWidth="38"/>
+    {riverTiers.map((y, row) => <g key={row}><rect x="25" y={y - 23} width="56" height="46" rx="9" fill="#ead9b4" stroke="#b19a71" strokeWidth="2"/><text x="53" y={y + 7} textAnchor="middle" fill="#3e4536" fontFamily="Georgia" fontSize="23">{['−3', '−2', '−1', '0', '+1'][row]}</text></g>)}
+    {sections.map(s => <rect key={s.id} x={sectionX(s.lanes, channels) - (s.capacity * layout.slotSpacing + 14) / 2} y={riverTiers[s.row] - layout.platformHeight / 2} width={s.capacity * layout.slotSpacing + 14} height={layout.platformHeight} rx={layout.platformHeight / 2} fill="url(#platform)" stroke={currentSlot?.section === s.id ? '#ffdf99' : '#b4a381'} strokeWidth="2.5"/>)}
+    {Array.from({ length: channels }, (_, lane) => { const x = laneX(lane, channels); return <g key={lane} aria-label={`Source ${lane + 1} gate`}><path d={`M${x - 21} 157 V181 M${x + 21} 157 V181`} stroke="#7b6648" strokeWidth="5"/><motion.rect x={x - 18} y="166" width="36" height="11" rx="3" fill="#665439" stroke="#c6ad76" strokeWidth="2" initial={false} animate={{ y: game.phase === 'explore' ? 0 : -30, opacity: game.phase === 'explore' ? 1 : 0 }} transition={{ duration: reduced ? 0 : .3 }}/></g> })}
+    <rect x="448" y="882" width="555" height="90" rx="9" fill="#203526ed" stroke="#967850" strokeWidth="2"/>{game.slots.map(slotButton)}
+    {game.fairySites.filter(site => sections.some(s => s.id === site.section)).map(site => { const p = fairyPoint(game, site.id); return <g key={site.id} data-faerie-site={site.id}><title>{site.kind === 'stump' ? 'Stump' : 'Statue'} · {site.fairies.join(', ') || 'empty'}</title><circle cx={p.x} cy={p.y} r="11" fill={site.kind === 'stump' ? '#8b7951' : '#ccb992'} stroke="#dbc492"/><text x={p.x} y={p.y + 4} textAnchor="middle" fontSize="12" fill="#273b2c">{site.kind === 'stump' ? '⊙' : '♧'}</text>{site.fairies.map((fairy, i) => <motion.g key={i} initial={step?.kind === 'fairy' && step.site === site.id && i === site.fairies.length - 1 ? { x: 766, y: 430, scale: 4 } : false} animate={{ x: p.x + 17 + i * 24, y: p.y - 8, scale: 1 }} transition={{ duration: reduced ? 0 : .55 }}><circle r="11" fill="#b0dfd6" stroke="#dfc185" strokeWidth="2"/><text y="4" textAnchor="middle" fontSize="15" fill="#306e6e">{fairySymbol(fairy)}</text></motion.g>)}</g> })}
+    {pearls.map(move => { const index = available.findIndex(p => p.id === move.pearl.id); return <RiverPearl key={`${presentation?.id ?? 'rest'}-${step?.kind ?? ''}-${move.pearl.id}`} move={move as PearlMove} reduced={reduced} selected={index >= 0 && selectedPearl === index} choose={!presentation && index >= 0 && onPearlSelect ? () => onPearlSelect(index) : undefined}/> })}
+  </svg>
 }

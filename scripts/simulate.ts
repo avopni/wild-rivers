@@ -54,15 +54,15 @@ if (undone.players[0].alpaca.join() !== 'blue' || undone.players[0].villagers[0]
 const nextPlayer = reduceGame(delivered, { type: 'doneDelivery' })
 if (canUndoDelivery(nextPlayer)) throw new Error('A later player cannot undo another player’s delivery')
 const utilityGame = createGame({ names: ['Utility', 'Other'], bots: [false, false], seed: 10 })
-utilityGame.phase = 'deliver'; utilityGame.deliverPlayer = 0; utilityGame.players[0].alpaca = ['blue']; utilityGame.players[0].fairies = ['Mushroom', 'Breeze']
+utilityGame.phase = 'deliver'; utilityGame.deliverPlayer = 0; utilityGame.players[0].alpaca = ['blue']; utilityGame.players[0].fairies = ['Wildbloom', 'Zephyr']
 const { history: _utilityHistory, ...utilityStart } = utilityGame
 utilityGame.history = [structuredClone(utilityStart)]
-const mushroomUsed = reduceGame(utilityGame, { type: 'mushroom', villagerId: 'starter', socket: 0 })
-const mushroomUndone = reduceGame(mushroomUsed, { type: 'undoDelivery' })
-if (!mushroomUndone.players[0].fairies.includes('Mushroom') || mushroomUndone.players[0].villagers[0].wild.length) throw new Error('Undo did not restore the Mushroom Fairy')
-const breezeUsed = reduceGame(utilityGame, { type: 'breeze', villagerId: 'starter', socket: 0, alpacaIndex: 0 })
-const breezeUndone = reduceGame(breezeUsed, { type: 'undoDelivery' })
-if (!breezeUndone.players[0].fairies.includes('Breeze') || breezeUndone.players[0].alpaca.join() !== 'blue' || breezeUndone.breezeLeft !== 0) throw new Error('Undo did not restore the Breeze move')
+const wildbloomUsed = reduceGame(utilityGame, { type: 'wildbloom', villagerId: 'starter', socket: 0 })
+const wildbloomUndone = reduceGame(wildbloomUsed, { type: 'undoDelivery' })
+if (!wildbloomUndone.players[0].fairies.includes('Wildbloom') || wildbloomUndone.players[0].villagers[0].wild.length) throw new Error('Undo did not restore the Wildbloom Fairy')
+const zephyrUsed = reduceGame(utilityGame, { type: 'zephyr', villagerId: 'starter', socket: 0, alpacaIndex: 0 })
+const zephyrUndone = reduceGame(zephyrUsed, { type: 'undoDelivery' })
+if (!zephyrUndone.players[0].fairies.includes('Zephyr') || zephyrUndone.players[0].alpaca.join() !== 'blue' || zephyrUndone.zephyrLeft !== 0) throw new Error('Undo did not restore the Zephyr move')
 
 for (const count of [2, 3, 4]) for (const seed of [1, 42, 2025]) {
   let game: Game = createGame({ names: Array.from({ length: count }, (_, i) => `Bot ${i + 1}`), bots: Array.from({ length: count }, () => true), seed })

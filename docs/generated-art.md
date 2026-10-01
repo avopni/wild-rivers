@@ -10,11 +10,11 @@ Each Camp image used this shared prompt, with the subject below substituted for 
 
 | Asset | Subject |
 | --- | --- |
-| `banner.png` | A small embroidered teal and coral banner planted beside a winding river, surrounded by soft reeds and a few pearl-like river stones. |
-| `lantern.png` | A glowing brass lantern hanging from a bent willow branch beside a small stream; amber light catching tiny floating fairy motes. |
-| `provisions.png` | A cozy woven picnic basket filled with bread, berries, and a folded teal cloth beside a woodland path. |
-| `fishing-nets.png` | A hand-tied fishing net draped over a curved wooden pole beside turquoise river water, with one luminous pearl caught in the mesh. |
-| `shamisen.png` | A small traditional shamisen musical instrument resting on a woven mat under flowering branches, a few subtle musical notes as decorative shapes. |
+| `trail-pennant.png` | A small embroidered teal and coral banner planted beside a winding river, surrounded by soft reeds and a few pearl-like river stones. |
+| `glowstone-lamp.png` | A glowing brass lantern hanging from a bent willow branch beside a small stream; amber light catching tiny floating fairy motes. |
+| `wonder-basket.png` | A cozy woven picnic basket filled with bread, berries, and a folded teal cloth beside a woodland path. |
+| `pearl-net.png` | A hand-tied fishing net draped over a curved wooden pole beside turquoise river water, with one luminous pearl caught in the mesh. |
+| `whisperstrings.png` | A small traditional three-string lute resting on a woven mat under flowering branches, a few subtle musical notes as decorative shapes. |
 
 ## Alpaca prompt
 
